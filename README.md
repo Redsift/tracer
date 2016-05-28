@@ -1,4 +1,4 @@
-
+# Using strace to generate
 
 strace -ttt -o ls.out ls
 

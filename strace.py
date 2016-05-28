@@ -348,8 +348,7 @@ class StraceInputStream:
 			else:
 				sys.stderr.write("Warning, invalid line: %d\n" % self.line_no)
 				#raise Exception("Invalid line (line %d)" % self.line_no)
-                return self.next()
-		
+				return None
 		
 		# Extract the return value
 		
