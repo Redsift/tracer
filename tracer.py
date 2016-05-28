@@ -18,7 +18,11 @@ from depsolver import DepSolver
 
 IGNORE = [ '/proc', '/proc/*', '/dev', '/dev/*', '/etc/ld.so.cache', '/app' ]
 
-COPYALL = [ '/etc/fonts', '/usr/share/X11/xkb', '/usr/share/fonts', '/usr/share/poppler/cMap', '/usr/share/zoneinfo' ]
+COPYALL = [ '/etc/fonts', 
+            '/usr/share/X11/xkb', 
+            '/usr/share/fonts', 
+            '/usr/share/poppler/cMap', 
+            '/usr/share/zoneinfo' ]
 
 MKDIRS = [ '/root', '/tmp', '/var/lib', '/var/cache', '/usr/local/share/fonts' ]
 
@@ -47,22 +51,32 @@ def abs_path(path, dir):
         
     return os.path.normpath(os.path.join(dir, path))
 
-def expand_dir(path, sym_set, files_set, found_set):
+def expand_dir(path, sym_set, files_set, found_set, no_cpy_all):
     for root, dirnames, filenames in os.walk(path):
         for name in filenames:
-            expand_file(os.path.join(root, name), sym_set, files_set, found_set)
+            expand_file(os.path.join(root, name), sym_set, files_set, found_set, no_cpy_all)
     
-def expand_file(path, sym_set, files_set, found_set):
+def expand_file(path, sym_set, files_set, found_set, no_cpy_all):
+    if len([n for n in IGNORE if fnmatch.fnmatch(path, n)]) != 0:
+        return
+    
+    if no_cpy_all != True:
+        dirs = [n for n in COPYALL if fnmatch.fnmatch(path, os.path.join(n, '*'))]
+        if len(dirs) != 0:
+            for roots in dirs:
+                expand_dir(roots, sym_set, files_set, found_set, True)
+            return
+        
     if os.path.islink(path):
         sym_set.add(path)
         lnk = os.readlink(path)
         if os.path.isabs(lnk) == False:
             lnk = os.path.join(os.path.dirname(path), lnk)
         
-        expand_file(lnk, sym_set, files_set, found_set) 
+        expand_file(lnk, sym_set, files_set, found_set, no_cpy_all) 
     
     if os.path.isdir(path):
-        expand_dir(path, sym_set, files_set, found_set)
+        expand_dir(path, sym_set, files_set, found_set, no_cpy_all)
         return
                 
     if os.path.isfile(path):
@@ -75,7 +89,7 @@ def expand_file(path, sym_set, files_set, found_set):
         deps = DepSolver()
         deps.add(path)
         for src in deps.deps:
-            expand_file(src, sym_set, files_set, found_set)
+            expand_file(src, sym_set, files_set, found_set, no_cpy_all)
 
 def generate_dockerfile(target, docker):
     env = Environment(loader=PackageLoader('tracer', 'templates'))
@@ -137,7 +151,7 @@ def main():
     found_set = sets.Set()
     
     for forced in INCLUDE:
-        expand_file(forced, sym_set, files_set, found_set)
+        expand_file(forced, sym_set, files_set, found_set, False)
         
     for input_file in args.files:
         cdir = args.chdir
@@ -159,8 +173,7 @@ def main():
                 if int(entry.return_value) < 0:
                     error_set.add(path)
                 else:
-                    if len([n for n in IGNORE if fnmatch.fnmatch(path, n)]) == 0:
-                        expand_file(path, sym_set, files_set, found_set)
+                    expand_file(path, sym_set, files_set, found_set, False)
 
                     
     for path in sorted(error_set):
