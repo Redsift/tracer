@@ -1,6 +1,8 @@
 FROM scratch
 COPY root /
+{% if docker.ldd %}
 RUN /sbin/ldconfig
+{% endif %}
 {% if docker.entrypoint %}
 ENTRYPOINT {{docker.entrypoint}}
 {% endif %}
