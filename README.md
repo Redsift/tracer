@@ -20,6 +20,23 @@
     
     # Run the scratch image
     docker run -ti traced-ls
+    
+## Advanced usage
+    
+    # Strace all commands for the current shell in the background
+    strace -ttt -o $$.out -p $$ -f &
+    
+    # Run my command(s)
+    ls
+    
+    # Exit the shell
+    exit
+    
+    # <pid-of-shell>.out now contains the syscall trace of the shell and the child ls  
+    # Assuming the pid of the shell was 22092, make a runc rootfs of the executed ls
+    # while ignoring the parent shell process
+    
+    ./tracer.py -e /bin/ls --runc -i 22092 22092.out  
 
 # Help
 
@@ -50,11 +67,16 @@
     --ids                 Include machine-id from host
     --no-ids
 
+# OCI/runc
+
+Use the `--runc` flag to create a `config.json` that can be used in tools like runc. `--entrypoint` and `--cmd` will be used to generate the spec. This flag requires `runc` installed and in the path.
+
 # Issues
 
 - Ensure your system `strace` is up to date. 
 - You typically cannot trace from inside a Docker container. 
 - Ensure you use the -ttt flag to create parseable timestamps.
+- When attempting to create small distributions, /usr/lib/locale/locale-archive can be large.
 
 # Acknowledgements
 

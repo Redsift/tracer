@@ -1,5 +1,5 @@
 FROM scratch
-COPY root /
+COPY rootfs /
 {% if docker.ldd %}
 RUN /sbin/ldconfig
 {% endif %}
