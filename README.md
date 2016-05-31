@@ -76,7 +76,7 @@ Use the `--runc` flag to create a `config.json` that can be used in tools like r
 - Ensure your system `strace` is up to date. 
 - You typically cannot trace from inside a Docker container. 
 - Ensure you use the -ttt flag to create parseable timestamps.
-- When attempting to create small distributions, /usr/lib/locale/locale-archive can be large.
+- When attempting to create small distributions from Red Hat based distros, /usr/lib/locale/locale-archive can be large.
 
 # Acknowledgements
 

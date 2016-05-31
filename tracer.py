@@ -18,7 +18,7 @@ import time
 from jinja2 import Environment, PackageLoader
 from depsolver import DepSolver
 
-IGNORE = [ '/proc', '/proc/*', '/dev', '/dev/*', '/etc/ld.so.cache' ]
+IGNORE = [ '/proc', '/proc/*', '/dev', '/dev/*', '/etc/ld.so.cache', '/tmp', '/run' ]
 
 MKDIRS = [ '/root', '/tmp' ]
 
@@ -286,7 +286,6 @@ def main():
             if entry.syscall_name in [ "open", "stat", "execve" ]:
                 path = entry.syscall_arguments[0]
                 path = abs_path(path[1:-1], cdir)
-                    
                 if int(entry.return_value) < 0:
                     error_set.add(path)
                 else:
